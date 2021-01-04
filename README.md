@@ -19,6 +19,16 @@ such as [cp-fetch](https://www.npmjs.com/package/cp-fetch) and [cp-axios](https:
 you get a powerful tool for building asynchronous logic for your components.
 You just have to use `generators` instead of an async function to make your code cancellable, 
 but basically, that just means you will have to use `yield` instead of `await` keyword.
+## Installation :hammer:
+- Install for node.js using npm/yarn:
+
+```bash
+$ npm install use-async-effect2 c-promise2
+```
+
+```bash
+$ yarn add use-async-effect2 c-promise2
+```
 ## Usage example
 Minimal example with json request [Live demo](https://codesandbox.io/s/friendly-murdock-wxq8u?file=/src/App.js)
 ````jsx

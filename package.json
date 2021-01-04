@@ -62,11 +62,15 @@
     "pause",
     "task"
   ],
+  "repository": "https://github.com/DigitalBrainJS/use-async-effect.git",
+  "bugs": {
+    "url": "https://github.com/DigitalBrainJS/use-async-effect/issues"
+  },
   "dependencies": {
-    "browser-sync": "^2.26.13",
-    "c-promise2": "^0.10.8",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "c-promise2": ">=0.10.8"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
@@ -76,6 +80,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.0.1",
     "@rollup/plugin-replace": "^2.3.4",
+    "browser-sync": "^2.26.13",
     "assert": "^2.0.0",
     "chai": "^4.2.0",
     "concurrently": "^5.3.0",
@@ -86,6 +91,8 @@
     "nodemon": "^2.0.6",
     "prop-types": "^15.7.2",
     "react-is": "^17.0.1",
-    "rollup": "^2.35.1"
+    "rollup": "^2.35.1",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
   }
 }
