@@ -1,6 +1,6 @@
 {
   "name": "use-async-effect2",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Async effect hook with cancellation and other powers of CPromise",
   "main": "lib/use-async-effect.js",
   "scripts": {
@@ -66,8 +66,7 @@
   "bugs": {
     "url": "https://github.com/DigitalBrainJS/use-async-effect/issues"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "peerDependencies": {
     "react": ">=16.8.0",
     "c-promise2": ">=0.10.8"
