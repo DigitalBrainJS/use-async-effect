@@ -1,15 +1,15 @@
 {
   "name": "use-async-effect",
   "version": "0.0.0",
-  "description": "cancellable async effect hook",
-  "main": "lib/index.js",
+  "description": "Async effect hook with cancellation and other powers of CPromise",
+  "main": "lib/use-async-effect.js",
   "scripts": {
     "test": "npm run test:build && mocha-headless-chrome -f test/test.html",
     "test:build": "rollup ./test/src/index.js --file ./test/build/index.js --format iife --config ./test/rollup.config.js",
     "playground": "npm run playground:build && concurrently --kill-others \"npm run playground:server\" \"npm run playground:watch\"",
     "playground:run": "node playground/build/index.js || true",
     "playground:build": "rollup ./playground/src/index.js --file ./playground/build/index.js --format iife --config ./playground/rollup.config.js",
-    "playground:watch": "nodemon --delay 1500ms --watch ./playground/src/ --watch lib/ --exec \\\"npm run playground:build\\\"",
+    "playground:watch": "nodemon --delay 1000ms --watch ./playground/src/ --watch lib/ --exec \\\"npm run playground:build\\\"",
     "playground:server": "browser-sync start --server --index ./playground/index.html --files \"./playground/build/*.*\""
   },
   "author": {
@@ -19,7 +19,13 @@
   },
   "license": "MIT",
   "keywords": [
+    "React",
+    "hook",
+    "useEffect",
+    "setState",
     "promise",
+    "c-promise",
+    "cpromise",
     "cancelable",
     "cancellable",
     "p-cancelable",
@@ -47,7 +53,6 @@
     "bluebird",
     "deferred",
     "react",
-    "setState",
     "cancellation",
     "aborting",
     "close",

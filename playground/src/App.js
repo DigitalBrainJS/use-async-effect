@@ -11,12 +11,10 @@ export default class App extends React.Component {
     }
 
     onFetchClick(){
-        console.log(`fetch click`);
         this.setState(({_url})=> this.setState({url: _url}))
     }
 
     onClick() {
-        console.log(`click`);
         this.setState({ timestamp: Date.now() });
     }
 

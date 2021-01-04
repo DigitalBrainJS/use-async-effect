@@ -1,17 +1,16 @@
 import React from "react";
-import {useEffect, useState} from "react";
-import ReactDOM from "react-dom";
+import {useState} from "react";
 import {useAsyncEffect, E_REASON_UNMOUNTED} from "../../lib/use-async-effect";
-import {CanceledError, CPromise} from "c-promise2";
+import {CanceledError} from "c-promise2";
 import cpFetch from "cp-fetch";
 
 export default function TestComponent(props) {
     const [text, setText] = useState("");
 
-    const [cancel, ref]= useAsyncEffect(function* ({onCancel}) {
+    const [cancel]= useAsyncEffect(function* ({onCancel}) {
         console.log("mount");
 
-        //this.timeout(1000);
+        this.timeout(5000);
 
         onCancel(()=> console.log('scope canceled'));
 

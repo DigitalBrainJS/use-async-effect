@@ -1,9 +1,8 @@
 /coverage/
 /.nyc_output/
 /dist/
+/test/build/
+/playground/build/
 /node_modules/
 /trash/
 /.idea/
-/test/tests/decorators.js
-/test/tests/decorators.legacy.js
-/playground/dist/
