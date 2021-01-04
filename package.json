@@ -10,7 +10,9 @@
     "playground:run": "node playground/build/index.js || true",
     "playground:build": "rollup ./playground/src/index.js --file ./playground/build/index.js --format iife --config ./playground/rollup.config.js",
     "playground:watch": "nodemon --delay 1000ms --watch ./playground/src/ --watch lib/ --exec \\\"npm run playground:build\\\"",
-    "playground:server": "browser-sync start --server --index ./playground/index.html --files \"./playground/build/*.*\""
+    "playground:server": "browser-sync start --server --index ./playground/index.html --files \"./playground/build/*.*\"",
+    "prepublishOnly": "npm run test",
+    "postversion": "git push && git push --tags"
   },
   "author": {
     "name": "Dmitriy Mozgovoy",
