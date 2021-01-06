@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import ReactDOM from "react-dom";
-import {useAsyncEffect} from "../../lib/use-async-effect";
+import {useAsyncEffect, useAsyncCallback} from "../../lib/use-async-effect";
 import CPromise from "c-promise2";
 
 const measureTime = () => {
@@ -48,7 +48,7 @@ describe("useAsyncEffect", function () {
         }
 
         ReactDOM.render(
-            <TestComponent></TestComponent>,
+            <TestComponent/>,
             document.getElementById('root')
         );
 
@@ -57,12 +57,11 @@ describe("useAsyncEffect", function () {
     it("should handle cancellation", function (done) {
 
         let counter = 0;
-        let time = measureTime();
 
         function TestComponent() {
             const [value, setValue] = useState(0);
 
-            const [cancel] = useAsyncEffect(function* () {
+            const cancel = useAsyncEffect(function* () {
                 yield CPromise.delay(200);
                 setValue(123);
                 yield CPromise.delay(200);
@@ -95,9 +94,76 @@ describe("useAsyncEffect", function () {
         }
 
         ReactDOM.render(
-            <TestComponent></TestComponent>,
+            <TestComponent/>,
             document.getElementById('root')
         );
 
     })
+});
+
+describe("useAsyncFn", function () {
+    it("should decorate user generator to CPromise", function (done) {
+        let called = false;
+        let time = measureTime();
+
+        function TestComponent() {
+            const fn = useAsyncCallback(function* (a, b) {
+                called = true;
+                yield CPromise.delay(100);
+                assert.deepStrictEqual([a, b], [1, 2]);
+            });
+
+            fn(1, 2).then(value => {
+                assert.ok(called);
+                if (time() < 100) {
+                    assert.fail('early completion');
+                }
+
+                done();
+            }, done);
+
+            return <div>Test</div>
+        }
+
+        ReactDOM.render(
+            <TestComponent/>,
+            document.getElementById('root')
+        );
+    });
+
+    it("should support concurrency limitation", function (done) {
+        let called = false;
+        let time = measureTime();
+        let pending = 0;
+        let counter = 0;
+        const concurrency = 2;
+
+        function TestComponent() {
+            const fn = useAsyncCallback(function* () {
+                if (++pending > concurrency) {
+                    assert.fail('threads excess');
+                }
+                yield CPromise.delay(100);
+                pending--;
+                counter++;
+            }, {concurrency});
+
+            const promises = [];
+
+            for (let i = 0; i < 10; i++) {
+                promises.push(fn());
+            }
+
+            Promise.all(promises).then(() => {
+                assert.strictEqual(counter, 10);
+            }).then(() => done(), done);
+
+            return <div>Test</div>
+        }
+
+        ReactDOM.render(
+            <TestComponent/>,
+            document.getElementById('root')
+        );
+    });
 });

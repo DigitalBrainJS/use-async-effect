@@ -4,10 +4,10 @@ import {useAsyncEffect, E_REASON_UNMOUNTED} from "../../lib/use-async-effect";
 import {CanceledError} from "c-promise2";
 import cpFetch from "cp-fetch";
 
-export default function TestComponent(props) {
+export default function TestComponent1(props) {
     const [text, setText] = useState("");
 
-    const [cancel]= useAsyncEffect(function* ({onCancel}) {
+    const cancel= useAsyncEffect(function* ({onCancel}) {
         console.log("mount");
 
         this.timeout(5000);
@@ -31,5 +31,6 @@ export default function TestComponent(props) {
 
     //setTimeout(()=> cancel("Ooops!"), 1000);
 
-    return <div>{text}</div>;
+    return <div className="component"><div className="caption">useAsyncEffect demo:</div><div>{text}</div></div>;
 }
+

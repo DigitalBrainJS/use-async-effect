@@ -1,5 +1,6 @@
 import React from "react";
-import TestComponent from "./TestComponent";
+import TestComponent1 from "./TestComponent1";
+import TestComponent2 from "./TestComponent2";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -28,8 +29,9 @@ export default class App extends React.Component {
             <div key={this.state.timestamp} id="app">
                 <input className="field-url" type="text" value={this.state._url} onChange={this.handleChange} />
                 <button className="btn-change" onClick={this.onFetchClick} disabled={this.state.url==this.state._url}>Change URL to Fetch</button>
-                <TestComponent url={this.state.url}></TestComponent>
-                <button onClick={this.onClick}>Remount</button>
+                <TestComponent1 url={this.state.url}></TestComponent1>
+                <TestComponent2 url={this.state.url}></TestComponent2>
+                <div><button onClick={this.onClick}>Remount all components</button></div>
             </div>
         );
     }
