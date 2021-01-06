@@ -16,7 +16,7 @@ To fix, cancel all subscriptions and asynchronous task in "a useEffect cleanup f
 It uses [c-promise2](https://www.npmjs.com/package/c-promise2) to make it work. 
 When it used in conjunction with other libraries that work with the CPromise,
 such as [cp-fetch](https://www.npmjs.com/package/cp-fetch) and [cp-axios](https://www.npmjs.com/package/cp-axios),
-you get a powerful tool for building asynchronous logic of your React components.
+you get a powerful tool for building asynchronous logic for your React components.
 You just have to use `generators` instead of an async function to make your code cancellable, 
 but basically, that just means you will have to use `yield` instead of `await` keyword.
 ## Installation :hammer:
