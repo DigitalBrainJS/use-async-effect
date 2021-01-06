@@ -66,6 +66,10 @@
   "bugs": {
     "url": "https://github.com/DigitalBrainJS/use-async-effect/issues"
   },
+  "typings": "./use-async-effect.d.ts",
+  "typescript": {
+    "definition": "./use-async-effect.d.ts"
+  },
   "dependencies": {},
   "peerDependencies": {
     "react": ">=16.8.0",
