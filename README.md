@@ -30,7 +30,7 @@ $ npm install use-async-effect2 c-promise2
 $ yarn add use-async-effect2 c-promise2
 ```
 ## Usage example
-Minimal example with json request [Live demo](https://codesandbox.io/s/friendly-murdock-wxq8u?file=/src/App.js)
+Minimal example with json request [Live demo](https://codesandbox.io/s/friendly-murdock-wxq8u?file=/src/TestComponent.js)
 ````jsx
 import React from "react";
 import {useState} from "react";
@@ -50,7 +50,7 @@ function JSONViewer(props) {
     return <div>{text}</div>;
 }
 ````
-Example with a timeout & error handling ([Live demo](https://codesandbox.io/s/async-effect-demo1-vho29)):
+Example with a timeout & error handling ([Live demo](https://codesandbox.io/s/async-effect-demo1-vho29?file=/src/TestComponent.js)):
 ````jsx
 import React from "react";
 import {useState} from "react";
