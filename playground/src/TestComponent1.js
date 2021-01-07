@@ -7,12 +7,12 @@ import cpFetch from "cp-fetch";
 export default function TestComponent1(props) {
     const [text, setText] = useState("");
 
-    const cancel= useAsyncEffect(function* ({onCancel}) {
+    const cancel = useAsyncEffect(function* ({onCancel}) {
         console.log("mount");
 
-        this.timeout(5000);
+        this.timeout(10000);
 
-        onCancel(()=> console.log('scope canceled'));
+        onCancel(() => console.log('scope canceled'));
 
         try {
             setText("fetching...");
@@ -31,6 +31,10 @@ export default function TestComponent1(props) {
 
     //setTimeout(()=> cancel("Ooops!"), 1000);
 
-    return <div className="component"><div className="caption">useAsyncEffect demo:</div><div>{text}</div></div>;
+    return <div className="component">
+        <div className="caption">useAsyncEffect demo:</div>
+        <div>{text}</div>
+        <button onClick={cancel}>Abort</button>
+    </div>;
 }
 
