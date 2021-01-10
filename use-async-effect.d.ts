@@ -1,14 +1,48 @@
-interface UseAsyncFnOptions {
-    deps?: [],
-    combine?: false,
-    cancelPrevious?: false,
-    concurrency?: 0
+export interface UseAsyncFnOptions {
+    /**
+     * @default []
+     */
+    deps?: any[],
+    /**
+     * @default false
+     */
+    combine?: boolean,
+    /**
+     * @default false
+     */
+    cancelPrevious?: boolean,
+    /**
+     * @default 0
+     */
+    concurrency?: number,
+    /**
+     * @default 0
+     */
+    queueSize?: number
 }
 
-type CancelReason= string|Error;
+export type CancelReason = string | Error;
 
-export function useAsyncHook(generator: GeneratorFunction, deps?: any[]): ((reason?: CancelReason)=> boolean)
-export function useAsyncCallback(generator: GeneratorFunction, deps?: any[]): ((reason?: CancelReason)=> boolean)
-export function useAsyncCallback(generator: GeneratorFunction, options?: UseAsyncFnOptions): ((reason?: CancelReason)=> boolean)
+export interface CancelFn {
+    (reason?: CancelReason): boolean
+}
+
+export interface DecoratedCallback {
+    (...args: any[]): any
+
+    cancel: (reason?: CancelReason)=> void
+}
+
+export type CPromiseGeneratorYield = null | PromiseLike<any> | CPromiseGeneratorYield[];
+
+export interface CPromiseGenerator {
+    (...args: any[]): Generator<CPromiseGeneratorYield>
+}
+
+export function useAsyncEffect(generator: CPromiseGenerator, deps?: any[]): CancelFn
+export function useAsyncCallback(generator: CPromiseGenerator, deps?: any[]): DecoratedCallback
+export function useAsyncCallback(generator: CPromiseGenerator, options?: UseAsyncFnOptions): DecoratedCallback
+
 export const E_REASON_UNMOUNTED: 'E_REASON_UNMOUNTED'
+export const E_REASON_QUEUE_OVERFLOW: 'E_REASON_QUEUE_OVERFLOW'
 

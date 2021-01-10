@@ -70,10 +70,12 @@
   "typescript": {
     "definition": "./use-async-effect.d.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "is-equal-objects": "^0.2.2"
+  },
   "peerDependencies": {
     "react": ">=16.8.0",
-    "c-promise2": ">=0.10.8"
+    "c-promise2": "0.10.8"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

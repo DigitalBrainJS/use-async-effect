@@ -14,7 +14,7 @@ This is an no-op, but it indicates a memory leak in your application.
 To fix, cancel all subscriptions and asynchronous task in "a useEffect cleanup function".
 ````
 It uses [c-promise2](https://www.npmjs.com/package/c-promise2) to make it work. 
-When it used in conjunction with other libraries that work with the CPromise,
+When it used in conjunction with other libraries from CPromise ecosystem,
 such as [cp-fetch](https://www.npmjs.com/package/cp-fetch) and [cp-axios](https://www.npmjs.com/package/cp-axios),
 you get a powerful tool for building asynchronous logic for your React components.
 You just have to use `generators` instead of an async function to make your code cancellable, 
@@ -52,70 +52,92 @@ function JSONViewer(props) {
 ````
 Example with a timeout & error handling ([Live demo](https://codesandbox.io/s/async-effect-demo1-vho29?file=/src/TestComponent.js)):
 ````jsx
-import React from "react";
-import {useState} from "react";
-import {useAsyncEffect, E_REASON_UNMOUNTED} from "use-async-effect2";
-import {CanceledError} from "c-promise2";
+import React, { useState } from "react";
+import { useAsyncEffect, E_REASON_UNMOUNTED } from "use-async-effect2";
+import { CanceledError } from "c-promise2";
 import cpFetch from "cp-fetch";
 
 export default function TestComponent(props) {
-    const [text, setText] = useState("");
+  const [text, setText] = useState("");
 
-    const [cancel]= useAsyncEffect(function* ({onCancel}) {
-        console.log("mount");
+  const cancel = useAsyncEffect(function* ({ onCancel }) {
+      console.log("mount");
 
-        this.timeout(5000);
+      this.timeout(props.timeout);
 
-        onCancel(()=> console.log('scope canceled'));
+      onCancel(() => console.log("scope canceled"));
 
-        try {
-            setText("fetching...");
-            const response = yield cpFetch(props.url);
-            const json = yield response.json();
-            setText(`Success: ${JSON.stringify(json)}`);
-        } catch (err) {
-            CanceledError.rethrow(err, E_REASON_UNMOUNTED); //passthrough
-            setText(`Failed: ${err}`);
-        }
+      try {
+        setText("fetching...");
+        const response = yield cpFetch(props.url);
+        const json = yield response.json();
+        setText(`Success: ${JSON.stringify(json)}`);
+      } catch (err) {
+        CanceledError.rethrow(err, E_REASON_UNMOUNTED); //passthrough
+        setText(`Failed: ${err}`);
+      }
 
-        return () => {
-            console.log("unmount", this.isCanceled);
-        };
-    }, [props.url]);
+      return () => {
+        console.log("unmount");
+      };
+    },
+    [props.url]
+  );
 
-    //setTimeout(()=> cancel("Ooops!"), 1000);
-
-    return <div>{text}</div>;
+  return (
+    <div className="component">
+      <div className="caption">useAsyncEffect demo:</div>
+      <div>{text}</div>
+      <button onClick={cancel}>Abort</button>
+    </div>
+  );
 }
 ````
 useAsyncCallback example ([Live demo](https://codesandbox.io/s/use-async-callback-bzpek?file=/src/TestComponent.js)):
 ````javascript
 import React from "react";
-import {useState} from "react";
-import {useAsyncCallback} from "use-async-effect2";
-import {CPromise} from "c-promise2";
+import { useState } from "react";
+import { useAsyncCallback, E_REASON_UNMOUNTED } from "../../lib/use-async-effect";
+import { CPromise, CanceledError } from "c-promise2";
 
-export default function TestComponent(props) {
+export default function TestComponent2() {
     const [text, setText] = useState("");
 
-    const asyncRoutine= useAsyncCallback(function*(v){
-        setText(`Stage1`);
-        yield CPromise.delay(1000);
-        setText(`Stage2`);
-        yield CPromise.delay(1000);
-        setText(`Stage3`);
-        yield CPromise.delay(1000);
-        setText(`Done`);
-        return v;
-    })
+    const asyncRoutine = useAsyncCallback(
+        function* (a, b) {
+            setText(`Stage1`);
+            yield CPromise.delay(1000);
+            setText(`Stage2`);
+            yield CPromise.delay(1000);
+            setText(`Stage3`);
+            yield CPromise.delay(1000);
+            setText(`Done`);
+            return Math.random();
+        },
+        { cancelPrevious: true }
+    );
 
-    const onClick= ()=>{
-        asyncRoutine(123).then(value=>{
-            console.log(`Result: ${value}`)
-        }, console.warn);
-    }
+    const onClick = () => {
+        asyncRoutine(123, 456).then(
+            (value) => {
+                setText(`Result: ${value}`);
+            },
+            (err) => {
+                console.warn(err);
+                CanceledError.rethrow(E_REASON_UNMOUNTED);
+                setText(`Fail: ${err}`);
+            }
+        );
+    };
 
-    return <div><button onClick={onClick}>Run async job</button><div>{text}</div></div>;
+    return (
+        <div className="component">
+            <div className="caption">useAsyncCallback demo:</div>
+            <button onClick={onClick}>Run async job</button>
+            <div>{text}</div>
+            <button onClick={() => asyncRoutine.cancel()}>Abort</button>
+        </div>
+    );
 }
 ````
 
@@ -128,7 +150,7 @@ just use the codesandbox [demo](https://codesandbox.io/s/async-effect-demo1-vho2
 
 ## API
 
-### useAsyncEffect(generatorFn, deps?): (function cancel():boolean)
+### useAsyncEffect(generatorFn, deps?): (cancel():boolean)
 A React hook based on [`useEffect`](https://reactjs.org/docs/hooks-effect.html), that resolves passed generator as asynchronous function. 
 The asynchronous generator sequence and its promise of the result will be canceled if 
 the effect cleanup process is started before it completes.
@@ -141,11 +163,12 @@ The last argument passed to this function and `this` refer to the CPromise insta
 ### useAsyncCallback(generatorFn, options?: object): CPromiseAsyncFunction
 This hook makes an async callback that can be automatically canceled on unmount or by user request.
 #### options:
-- `deps: any[]`
-- `combine:boolean` - allow only single thread running. 
-All subsequent callings will return promises that subscribed to the pending promise of the first call.
+- `deps: any[]` - effect dependencies 
+- `combine:boolean` - subscribe to the result of the async function already 
+running with the same arguments or run a new one. 
 - `cancelPrevious:boolean` - cancel the previous pending async function before running a new one. 
-- `concurrency: number=0` - set concurrency limit for simultaneous calls.
+- `concurrency: number=0` - set concurrency limit for simultaneous calls. `0` mean unlimited.
+- `queueSize: number=0` - set max queue size.
 
 ## Related projects
 - [c-promise2](https://www.npmjs.com/package/c-promise2) - promise with cancellation, decorators, timeouts, progress capturing, pause and user signals support

@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import ReactDOM from "react-dom";
 import {useAsyncEffect, useAsyncCallback} from "../../lib/use-async-effect";
-import CPromise from "c-promise2";
+import CPromise, {CanceledError} from "c-promise2";
 
 const measureTime = () => {
     let timestamp = Date.now();
@@ -113,7 +113,7 @@ describe("useAsyncFn", function () {
                 assert.deepStrictEqual([a, b], [1, 2]);
             });
 
-            fn(1, 2).then(value => {
+            fn(1, 2).then(() => {
                 assert.ok(called);
                 if (time() < 100) {
                     assert.fail('early completion');
@@ -132,8 +132,6 @@ describe("useAsyncFn", function () {
     });
 
     it("should support concurrency limitation", function (done) {
-        let called = false;
-        let time = measureTime();
         let pending = 0;
         let counter = 0;
         const concurrency = 2;
@@ -141,7 +139,7 @@ describe("useAsyncFn", function () {
         function TestComponent() {
             const fn = useAsyncCallback(function* () {
                 if (++pending > concurrency) {
-                    assert.fail('threads excess');
+                    assert.fail(`threads excess ${pending}>${concurrency}`);
                 }
                 yield CPromise.delay(100);
                 pending--;
@@ -157,6 +155,86 @@ describe("useAsyncFn", function () {
             Promise.all(promises).then(() => {
                 assert.strictEqual(counter, 10);
             }).then(() => done(), done);
+
+            return <div>Test</div>
+        }
+
+        ReactDOM.render(
+            <TestComponent/>,
+            document.getElementById('root')
+        );
+    });
+
+    it("should support combine option", function (done) {
+        let pending = 0;
+        let counter = 0;
+        const concurrency = 1;
+        let value = 0;
+
+        function TestComponent() {
+            const fn = useAsyncCallback(function* () {
+                if (++pending > concurrency) {
+                    assert.fail(`threads excess ${pending}>${concurrency}`);
+                }
+                yield CPromise.delay(100);
+                pending--;
+                counter++;
+                return ++value;
+            }, {combine: true});
+
+            const promises = [];
+
+            for (let i = 0; i < 10; i++) {
+                promises.push(fn());
+            }
+
+            Promise.all(promises).then((results) => {
+                assert.strictEqual(counter, 1, "counter fail");
+                results.forEach(result => assert.strictEqual(result, value, "result fail"))
+            }).then(() => done(), done);
+
+            return <div>Test</div>
+        }
+
+        ReactDOM.render(
+            <TestComponent/>,
+            document.getElementById('root')
+        );
+    });
+
+    it("should support cancelPrevious option", function (done) {
+        let pending = 0;
+        let counter = 0;
+        const concurrency = 1;
+
+        function TestComponent() {
+            const fn = useAsyncCallback(function* (v) {
+                yield CPromise.delay(10);
+                if (++pending > concurrency) {
+                    assert.fail(`threads excess ${pending}>${concurrency}`);
+                }
+                yield CPromise.delay(200);
+                return v;
+            }, {cancelPrevious: true});
+
+            Promise.all([
+                fn(123).finally(()=>{
+                    pending--;
+                    counter++;
+                }).then(() => {
+                    assert.fail('was not cancelled');
+                }, (err) => {
+                    assert.ok(err instanceof CanceledError);
+                    return true;
+                }),
+                delay(100).then(() => {
+                    return fn(456)
+                })
+            ])
+                .then(values => {
+                    assert.deepStrictEqual(values, [true, 456])
+                    done();
+                }).catch(done);
 
             return <div>Test</div>
         }
