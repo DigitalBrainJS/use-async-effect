@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/DigitalBrainJS/use-async-effect.svg?branch=master)](https://travis-ci.org/DigitalBrainJS/use-async-effect)
+[![Build Status](https://travis-ci.com/DigitalBrainJS/use-async-effect.svg?branch=master)](https://travis-ci.com/DigitalBrainJS/use-async-effect)
 ![npm](https://img.shields.io/npm/dm/use-async-effect2)
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/use-async-effect)
 ![David](https://img.shields.io/david/DigitalBrainJS/use-async-effect)
