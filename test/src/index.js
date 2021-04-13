@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import ReactDOM from "react-dom";
 import {useAsyncEffect, useAsyncCallback} from "../../lib/use-async-effect";
-import CPromise, {CanceledError} from "c-promise2";
+import {CPromise, CanceledError} from "c-promise2";
 
 const measureTime = () => {
     let timestamp = Date.now();

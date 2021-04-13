@@ -18,7 +18,19 @@ export interface UseAsyncFnOptions {
     /**
      * @default 0
      */
-    queueSize?: number
+    queueSize?: number,
+    /**
+     * @default false
+     */
+    scopeArg?: boolean
+}
+
+export interface UseAsyncEffectOptions {
+    /**
+     * @default false
+     */
+    skipFirst: boolean,
+    deps?: any[],
 }
 
 export type CancelReason = string | Error;
@@ -40,6 +52,7 @@ export interface CPromiseGenerator {
 }
 
 export function useAsyncEffect(generator: CPromiseGenerator, deps?: any[]): CancelFn
+export function useAsyncEffect(generator: CPromiseGenerator, options?: UseAsyncEffectOptions): CancelFn
 export function useAsyncCallback(generator: CPromiseGenerator, deps?: any[]): DecoratedCallback
 export function useAsyncCallback(generator: CPromiseGenerator, options?: UseAsyncFnOptions): DecoratedCallback
 
