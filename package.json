@@ -78,7 +78,7 @@
     "commitLimit": false
   },
   "dependencies": {
-    "c-promise2": "^0.11.0",
+    "c-promise2": "^0.11.2",
     "is-equal-objects": "^0.2.2"
   },
   "peerDependencies": {
