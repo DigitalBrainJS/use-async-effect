@@ -41,7 +41,7 @@ you get a powerful tool for building asynchronous logic for your React component
 providing the ability to cancel async sequence in any stage in automatically way, when the related component unmounting.
 It's totally the same as async functions, but with cancellation- you need use 'yield' instead of 'await'. That's all.
 
-JSON fetching using `useAsyncEffect` [Live demo](https://codesandbox.io/s/friendly-murdock-wxq8u?file=/src/TestComponent.js)
+JSON fetching using `useAsyncEffect` [Live demo](https://codesandbox.io/s/use-async-effect-fetch-tiny-ui-xbmk2?file=/src/TestComponent.js)
 ````jsx
 import React from "react";
 import {useState} from "react";
@@ -90,11 +90,62 @@ export default function TestComponent(props) {
 }
 ````
 
+Live search for character from the `rickandmorty` universe using `rickandmortyapi.com`:
+
+[Live demo](https://codesandbox.io/s/use-async-effect-axios-rickmorty-search-ui-sd2mv?file=/src/TestComponent.js)
+````jsx
+import React, { useState } from "react";
+import {
+  useAsyncCallback,
+  E_REASON_UNMOUNTED,
+  CanceledError
+} from "use-async-effect2";
+import { CPromise } from "c-promise2";
+import cpAxios from "cp-axios";
+
+export default function TestComponent(props) {
+  const [text, setText] = useState("");
+
+  const handleSearch = useAsyncCallback(
+    function* (event) {
+      const { value } = event.target;
+      if (value.length < 3) return;
+      yield CPromise.delay(1000);
+      setText("searching...");
+      try {
+        const response = yield cpAxios(
+          `https://rickandmortyapi.com/api/character/?name=${value}`
+        ).timeout(props.timeout);
+        setText(response.data?.results?.map(({ name }) => name).join(","));
+      } catch (err) {
+        CanceledError.rethrow(err, E_REASON_UNMOUNTED);
+        setText(err.response?.status === 404 ? "Not found" : err.toString());
+      }
+    },
+    { cancelPrevious: true }
+  );
+
+  return (
+    <div className="component">
+      <div className="caption">
+        useAsyncCallback demo: Rickandmorty universe character search
+      </div>
+      Character name: <input onChange={handleSearch}></input>
+      <div>{text}</div>
+      <button className="btn btn-warning" onClick={handleSearch.cancel}>
+        Cancel request
+      </button>
+    </div>
+  );
+}
+````
+This code handles the cancellation of the previous search sequence (including aborting the request) and
+canceling the sequence when the component is unmounted to avoid the React leak warning.
+
 An example with a timeout & error handling ([Live demo](https://codesandbox.io/s/async-effect-demo1-vho29?file=/src/TestComponent.js)):
 ````jsx
 import React, { useState } from "react";
-import { useAsyncEffect, E_REASON_UNMOUNTED } from "use-async-effect2";
-import { CanceledError } from "c-promise2";
+import { useAsyncEffect, E_REASON_UNMOUNTED, CanceledError} from "use-async-effect2";
 import cpFetch from "cp-fetch";
 
 export default function TestComponent(props) {

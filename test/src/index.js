@@ -98,10 +98,31 @@ describe("useAsyncEffect", function () {
             document.getElementById('root')
         );
 
-    })
+    });
+
+    it("should able to catch cancellation error with E_REASON_UNMOUNTED code", function (done) {
+        function TestComponent() {
+            useAsyncEffect(function*(){
+                try{
+                    yield CPromise.delay(500);
+                }catch(err){
+                    CanceledError.rethrow(err, E_REASON_UNMOUNTED);
+                    assert.fail('E_REASON_UNMOUNTED was not caught');
+                }
+                done();
+            });
+
+            return <div>Test</div>;
+        }
+
+        ReactDOM.render(
+          <TestComponent/>,
+          document.getElementById('root')
+        );
+    });
 });
 
-describe("useAsyncFn", function () {
+describe("useAsyncCallback", function () {
     it("should decorate user generator to CPromise", function (done) {
         let called = false;
         let time = measureTime();
@@ -204,12 +225,12 @@ describe("useAsyncFn", function () {
 
     it("should support cancelPrevious option", function (done) {
         let pending = 0;
-        let counter = 0;
         const concurrency = 1;
 
         function TestComponent() {
+
             const fn = useAsyncCallback(function* (v) {
-                yield CPromise.delay(10);
+                yield CPromise.delay(100);
                 if (++pending > concurrency) {
                     assert.fail(`threads excess ${pending}>${concurrency}`);
                 }
@@ -218,23 +239,22 @@ describe("useAsyncFn", function () {
             }, {cancelPrevious: true});
 
             Promise.all([
-                fn(123).finally(()=>{
+                fn(123).finally(() => {
                     pending--;
-                    counter++;
                 }).then(() => {
                     assert.fail('was not cancelled');
                 }, (err) => {
-                    assert.ok(err instanceof CanceledError);
+                    assert.ok(err instanceof CanceledError, `not canceled error ${err}`);
                     return true;
                 }),
                 delay(100).then(() => {
                     return fn(456)
                 })
             ])
-                .then(values => {
-                    assert.deepStrictEqual(values, [true, 456])
-                    done();
-                }).catch(done);
+              .then(values => {
+                  assert.deepStrictEqual(values, [true, 456])
+                  done();
+              }).catch(done);
 
             return <div>Test</div>
         }
