@@ -35,13 +35,34 @@ To fix, cancel all subscriptions and asynchronous task in "a useEffect cleanup f
 It uses [c-promise2](https://www.npmjs.com/package/c-promise2) to make it work. 
 When used in conjunction with other libraries from CPromise ecosystem,
 such as [cp-fetch](https://www.npmjs.com/package/cp-fetch) and [cp-axios](https://www.npmjs.com/package/cp-axios),
-you get a powerful tool for building asynchronous logic for your React components.
+you get a powerful tool for building asynchronous logic of React components.
 
 `useAsyncEffect` & `useAsyncCallback` hooks make cancelable async functions from generators,
 providing the ability to cancel async sequence in any stage in automatically way, when the related component unmounting.
 It's totally the same as async functions, but with cancellation- you need use 'yield' instead of 'await'. That's all.
 
-JSON fetching using `useAsyncEffect` [Live demo](https://codesandbox.io/s/use-async-effect-fetch-tiny-ui-xbmk2?file=/src/TestComponent.js)
+A tiny `useAsyncEffect` demo with JSON fetching using internal states: 
+
+[Live demo to play](https://codesandbox.io/s/use-async-effect-fetch-tiny-ui-states-g5qd7)
+
+````javascript
+export default function JSONViewer(props) {
+    const [cancel, done, result]= useAsyncEffect(function*(){
+      return (yield cpAxios(props.url)).data;
+    }, {states: true})
+
+    return (
+        <div className="component">
+            <div className="caption">useAsyncEffect demo:</div>
+            <div>{done? JSON.stringify(result) : "loading..."}</div>
+            <button onClick={cancel}>Cancel async effect</button>
+        </div>
+    );
+}
+````
+
+[Another demo](https://codesandbox.io/s/use-async-effect-fetch-tiny-ui-xbmk2?file=/src/TestComponent.js)
+
 ````jsx
 import React from "react";
 import {useState} from "react";
@@ -62,33 +83,6 @@ function JSONViewer(props) {
 }
 ````
 Notice: the related network request will be aborted, when unmounting.
-
-It can be even easier with the [axios wrapper](https://www.npmjs.com/package/cp-axios) ([Demo](https://codesandbox.io/s/use-async-effect-axios-tiny-lsbpv?file=/src/TestComponent.js)):
-````javascript
-import React, { useState } from "react";
-import { useAsyncEffect } from "use-async-effect2";
-import cpAxios from "cp-axios";
-
-export default function TestComponent(props) {
-  const [text, setText] = useState("");
-
-  const cancel = useAsyncEffect(
-    function* () {
-      const response = yield cpAxios(props.url);
-      setText(JSON.stringify(response.data));
-    },
-    [props.url]
-  );
-
-  return (
-    <div className="component">
-      <div className="caption">useAsyncEffect demo:</div>
-      <div>{text}</div>
-      <button onClick={cancel}>Cancel request</button>
-    </div>
-  );
-}
-````
 
 Live search for character from the `rickandmorty` universe using `rickandmortyapi.com`:
 
@@ -253,6 +247,10 @@ export default function TestComponent(props) {
 
 To learn more about available features, see the c-promise2 [documentation](https://www.npmjs.com/package/c-promise2).
 
+### Wiki
+
+See the [Project Wiki](https://github.com/DigitalBrainJS/use-async-effect/wiki) to get the most exhaustive guide.
+
 ## Playground
 
 To get it, clone the repository and run `npm run playground` in the project directory or
@@ -268,29 +266,59 @@ the effect cleanup process started before it completes.
 The generator can return a cleanup function similar to the `useEffect` hook. 
 - `generatorFn(scope: CPromise)` : `GeneratorFunction` - generator to resolve as an async function. 
 Generator context (`this`) refers to the CPromise instance.
-- `deps?: any[]` - effect dependencies
-- `options.deps?: any[]` - skip the first render
+- `deps?: any[] | UseAsyncEffectOptions` - effect dependencies
+
+#### UseAsyncEffectOptions:
+- `options.deps?: any[]` - effect dependencies
 - `options.skipFirst?: boolean` - skip first render
+- `options.states: boolean= false` - use states
+
+#### Available states vars:
+- `done: boolean` - the function execution is completed (with success or failure)
+- `result: any` - refers to the resolved function result
+- `error: object` - refers to the error object. This var is always set when an error occurs.
+- `canceled:boolean` - is set to true if the function has been failed with a `CanceledError`.
+
+All these vars are defined on the returned `cancelFn` function and can be alternative reached through
+the iterator interface in the following order: 
+````javascript
+const [cancelFn, done, result, error, canceled]= useAsyncEffect(/*code*/);
+````
 
 ### useAsyncCallback(generatorFn, deps?: []): CPromiseAsyncFunction
 ### useAsyncCallback(generatorFn, options?: object): CPromiseAsyncFunction
 This hook makes an async callback that can be automatically canceled on unmount or by user request.
 - `generatorFn([scope: CPromise], ...userArguments)` : `GeneratorFunction` - generator to resolve as an async function. 
 Generator context (`this`) and the first argument (if `options.scopeArg` is set) refer to the CPromise instance.
-
-#### options:
+- `deps?: any[] | UseAsyncCallbackOptions` - effect dependencies
+#### UseAsyncCallbackOptions:
 - `deps: any[]` - effect dependencies 
 - `combine:boolean` - subscribe to the result of the async function already 
 running with the same arguments or run a new one. 
 - `cancelPrevious:boolean` - cancel the previous pending async function before running a new one. 
-- `concurrency: number=0` - set concurrency limit for simultaneous calls. `0` mean unlimited.
+- `threads: number=0` - set concurrency limit for simultaneous calls. `0` mean unlimited.
 - `queueSize: number=0` - set max queue size.
-- `scopeArg: boolean=false` - pass CPromise scope to the generator function as the first argument.
+- `scopeArg: boolean=false` - pass `CPromise` scope to the generator function as the first argument.
+- `states: boolean=false` - enable state changing. The function must be single threaded to use the states.
+
+#### Available states vars:
+- `pending: boolean` - the function is in the pending state
+- `done: boolean` - the function execution is completed (with success or failure)
+- `result: any` - refers to the resolved function result
+- `error: object` - refers to the error object. This var is always set when an error occurs.
+- `canceled:boolean` - is set to true if the function has been failed with a `CanceledError`.
+
+All these vars are defined on the decorated function and can be alternative reached through
+the iterator interface in the following order: 
+````javascript
+const [decoratedFn, cancelFn, pending, done, result, error, canceled]= useAsyncCallback(/*code*/);
+````
 
 ## Related projects
 - [c-promise2](https://www.npmjs.com/package/c-promise2) - promise with cancellation, decorators, timeouts, progress capturing, pause and user signals support
 - [cp-axios](https://www.npmjs.com/package/cp-axios) - a simple axios wrapper that provides an advanced cancellation api
 - [cp-fetch](https://www.npmjs.com/package/cp-fetch) - fetch with timeouts and request cancellation
+- [cp-koa](https://www.npmjs.com/package/cp-koa) - koa with middlewares cancellation
 
 ## License
 

@@ -14,7 +14,7 @@ export interface UseAsyncFnOptions {
     /**
      * @default 0
      */
-    concurrency?: number,
+    threads?: number,
     /**
      * @default 0
      */
@@ -22,7 +22,11 @@ export interface UseAsyncFnOptions {
     /**
      * @default false
      */
-    scopeArg?: boolean
+    scopeArg?: boolean,
+    /**
+     * @default false
+     */
+    states?: boolean
 }
 
 export interface UseAsyncEffectOptions {
@@ -30,7 +34,14 @@ export interface UseAsyncEffectOptions {
      * @default false
      */
     skipFirst: boolean,
+    /**
+     * @default []
+     */
     deps?: any[],
+    /**
+     * @default false
+     */
+    states?: boolean
 }
 
 export type CancelReason = string | Error;
@@ -39,10 +50,23 @@ export interface CancelFn {
     (reason?: CancelReason): boolean
 }
 
+export type pendingState = boolean;
+export type doneState = boolean;
+export type resultState = boolean;
+export type errorState = boolean;
+export type canceledState = boolean;
+
 export interface DecoratedCallback {
     (...args: any[]): any
 
-    cancel: (reason?: CancelReason)=> void
+    cancel: (reason?: CancelReason)=> void,
+    0: DecoratedCallback,
+    1: (reason?: CancelReason)=> void,
+    2: pendingState,
+    3: doneState,
+    4: resultState,
+    5: errorState,
+    6: canceledState,
 }
 
 export type CPromiseGeneratorYield = null | PromiseLike<any> | CPromiseGeneratorYield[];
@@ -58,4 +82,5 @@ export function useAsyncCallback(generator: CPromiseGenerator, options?: UseAsyn
 
 export const E_REASON_UNMOUNTED: 'E_REASON_UNMOUNTED'
 export const E_REASON_QUEUE_OVERFLOW: 'E_REASON_QUEUE_OVERFLOW'
+export const E_REASON_RESTART: 'E_REASON_RESTART'
 

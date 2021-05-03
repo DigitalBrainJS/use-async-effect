@@ -1,6 +1,8 @@
 import React from "react";
 import TestComponent1 from "./TestComponent1";
 import TestComponent2 from "./TestComponent2";
+import TestComponent3 from "./TestComponent3";
+import TestComponent4 from "./TestComponent4";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -31,6 +33,8 @@ export default class App extends React.Component {
                 <button className="btn-change" onClick={this.onFetchClick} disabled={this.state.url==this.state._url}>Change URL to Fetch</button>
                 <TestComponent1 url={this.state.url}></TestComponent1>
                 <TestComponent2 url={this.state.url}></TestComponent2>
+                <TestComponent3 url={this.state.url}></TestComponent3>
+                <TestComponent4 url={this.state.url}></TestComponent4>
                 <div><button onClick={this.onClick}>Remount all components</button></div>
             </div>
         );

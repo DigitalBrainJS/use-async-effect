@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import ReactDOM from "react-dom";
 import {useAsyncEffect, useAsyncCallback} from "../../lib/use-async-effect";
 import {CPromise, CanceledError} from "c-promise2";
@@ -10,10 +10,27 @@ const measureTime = () => {
 
 const delay = (ms, value) => new Promise(resolve => setTimeout(resolve, ms, value));
 
+const noop= ()=>{}
+
+const stateSnapshots= (reject, ...states)=>{
+    let index= 0;
+    const {length}= states;
+    return (state)=>{
+        try {
+            assert.deepStrictEqual(state, states[index], `States at index [${index}] do not match`);
+            index++;
+        }catch(err){
+            reject(err);
+            return;
+        }
+
+        return index >= length;
+    }
+}
 
 describe("useAsyncEffect", function () {
-    it("should support generator resolving", function (done) {
 
+    it("should support generator resolving", function (done) {
         let counter = 0;
         let time = measureTime();
 
@@ -51,7 +68,6 @@ describe("useAsyncEffect", function () {
             <TestComponent/>,
             document.getElementById('root')
         );
-
     })
 
     it("should handle cancellation", function (done) {
@@ -120,6 +136,118 @@ describe("useAsyncEffect", function () {
           document.getElementById('root')
         );
     });
+    describe('states', function (){
+        it("should handle success case", function () {
+            return new Promise((resolve, reject)=>{
+                const matchState= stateSnapshots(reject, {
+                    done: false,
+                    result: undefined,
+                    error: undefined,
+                    canceled: false
+                },{
+                    done: true,
+                    result: 123,
+                    error: undefined,
+                    canceled: false
+                })
+
+                function TestComponent() {
+                    const [cancelFn, done, result, error, canceled]= useAsyncEffect(function*(){
+                        return yield CPromise.delay(100, 123);
+                    }, {states: true});
+
+                    matchState({
+                        done, result, error, canceled
+                    }) && resolve();
+
+                    return <div>Test</div>;
+                }
+
+                ReactDOM.render(
+                  <TestComponent/>,
+                  document.getElementById('root')
+                );
+            });
+        });
+
+        it("should handle failure case", function () {
+            return new Promise((resolve, reject)=>{
+                const targetError= new Error('test');
+
+                const matchState= stateSnapshots(reject, {
+                    done: false,
+                    result: undefined,
+                    error: undefined,
+                    canceled: false
+                },{
+                    done: true,
+                    result: undefined,
+                    error: targetError,
+                    canceled: false
+                })
+
+                function TestComponent() {
+                    const [cancelFn, done, result, error, canceled]= useAsyncEffect(function*(){
+                        yield CPromise.delay(100);
+                        throw targetError;
+                    }, {states: true});
+
+                    matchState({
+                        done, result, error, canceled
+                    }) && resolve();
+
+                    return <div>Test</div>;
+                }
+
+                ReactDOM.render(
+                  <TestComponent/>,
+                  document.getElementById('root')
+                );
+            });
+        });
+
+        it("should handle cancellation case", function () {
+            return new Promise((resolve, reject)=>{
+                const targetError= new CanceledError('test');
+
+                const matchState= stateSnapshots(reject, {
+                    done: false,
+                    result: undefined,
+                    error: undefined,
+                    canceled: false
+                },{
+                    done: true,
+                    result: undefined,
+                    error: targetError,
+                    canceled: true
+                })
+
+                function TestComponent() {
+                    const [cancelFn, done, result, error, canceled]= useAsyncEffect(function*(){
+                        yield CPromise.delay(100);
+                        throw targetError;
+                    }, {states: true});
+
+                    useState(()=>{
+                        setTimeout(()=> cancelFn(targetError), 50);
+                    })
+
+                    matchState({
+                        done, result, error, canceled
+                    }) && resolve();
+
+                    return <div>Test</div>;
+                }
+
+
+
+                ReactDOM.render(
+                  <TestComponent/>,
+                  document.getElementById('root')
+                );
+            });
+        });
+    });
 });
 
 describe("useAsyncCallback", function () {
@@ -155,17 +283,17 @@ describe("useAsyncCallback", function () {
     it("should support concurrency limitation", function (done) {
         let pending = 0;
         let counter = 0;
-        const concurrency = 2;
+        const threads = 2;
 
         function TestComponent() {
             const fn = useAsyncCallback(function* () {
-                if (++pending > concurrency) {
-                    assert.fail(`threads excess ${pending}>${concurrency}`);
+                if (++pending > threads) {
+                    assert.fail(`threads excess ${pending}>${threads}`);
                 }
                 yield CPromise.delay(100);
                 pending--;
                 counter++;
-            }, {concurrency});
+            }, {threads});
 
             const promises = [];
 
@@ -263,5 +391,151 @@ describe("useAsyncCallback", function () {
             <TestComponent/>,
             document.getElementById('root')
         );
+    });
+
+    describe('states', function (){
+        it("should handle success case", function () {
+            return new Promise((resolve, reject)=>{
+                const matchState= stateSnapshots(reject, {
+                    done: false,
+                    result: undefined,
+                    error: undefined,
+                    pending: false,
+                    canceled: false
+                },{
+                    done: false,
+                    result: undefined,
+                    error: undefined,
+                    pending: true,
+                    canceled: false
+                },{
+                    done: true,
+                    pending: false,
+                    result: 123,
+                    error: undefined,
+                    canceled: false
+                });
+
+                function TestComponent() {
+                    const [fn, cancelFn, pending, done, result, error, canceled]= useAsyncCallback(function*(){
+                        return yield CPromise.delay(100, 123);
+                    }, {states: true, threads: 1});
+
+                    matchState({
+                        pending, done, result, error, canceled
+                    }) && resolve();
+
+                    useEffect(()=>{
+                        fn();
+                    }, []);
+
+                    return <div>Test</div>;
+                }
+
+                ReactDOM.render(
+                  <TestComponent/>,
+                  document.getElementById('root')
+                );
+            });
+        });
+
+        it("should handle failure case", function () {
+            return new Promise((resolve, reject)=>{
+                const targetError= new Error('test');
+
+                const matchState = stateSnapshots(reject, {
+                    done: false,
+                    pending: false,
+                    result: undefined,
+                    error: undefined,
+                    canceled: false
+                }, {
+                    done: false,
+                    result: undefined,
+                    error: undefined,
+                    pending: true,
+                    canceled: false
+                }, {
+                    done: true,
+                    pending: false,
+                    result: undefined,
+                    error: targetError,
+                    canceled: false
+                });
+
+                function TestComponent() {
+                    const [fn, cancelFn, pending, done, result, error, canceled]= useAsyncCallback(function*(){
+                        yield CPromise.delay(100);
+                        throw targetError;
+                    }, {states: true, threads: 1});
+
+                    matchState({
+                        pending, done, result, error, canceled
+                    }) && resolve();
+
+                    useEffect(()=>{
+                        fn().catch(noop);
+                    }, []);
+
+                    return <div>Test</div>;
+                }
+
+                ReactDOM.render(
+                  <TestComponent/>,
+                  document.getElementById('root')
+                );
+            });
+        });
+
+        it("should handle cancellation case", function () {
+            return new Promise((resolve, reject)=>{
+                const targetError= new CanceledError('test');
+
+                const matchState = stateSnapshots(reject, {
+                    done: false,
+                    pending: false,
+                    result: undefined,
+                    error: undefined,
+                    canceled: false
+                }, {
+                    done: false,
+                    result: undefined,
+                    error: undefined,
+                    pending: true,
+                    canceled: false
+                }, {
+                    done: true,
+                    pending: false,
+                    result: undefined,
+                    error: targetError,
+                    canceled: true
+                });
+
+                function TestComponent() {
+                    const [fn, cancelFn, pending, done, result, error, canceled]= useAsyncCallback(function*(){
+                        yield CPromise.delay(100);
+                        throw targetError;
+                    }, {states: true, threads: 1});
+
+                    matchState({
+                        pending, done, result, error, canceled
+                    }) && resolve();
+
+                    useEffect(()=>{
+                        fn().catch(noop);
+                        setTimeout(()=>{
+                            cancelFn(targetError);
+                        }, 50);
+                    }, []);
+
+                    return <div>Test</div>;
+                }
+
+                ReactDOM.render(
+                  <TestComponent/>,
+                  document.getElementById('root')
+                );
+            });
+        });
     });
 });
