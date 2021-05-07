@@ -80,7 +80,7 @@
     "commitLimit": false
   },
   "dependencies": {
-    "c-promise2": "^0.12.5",
+    "c-promise2": "^0.13.0",
     "is-equal-objects": "^0.2.2"
   },
   "peerDependencies": {
@@ -99,8 +99,8 @@
     "browser-sync": "^2.26.14",
     "chai": "^4.3.4",
     "concurrently": "^5.3.0",
-    "cp-axios": "^0.2.0",
-    "cp-fetch": "^0.2.0",
+    "cp-axios": "^0.3.0",
+    "cp-fetch": "^0.3.0",
     "eslint": "^7.24.0",
     "mocha": "^8.3.2",
     "mocha-headless-chrome": "^3.1.0",

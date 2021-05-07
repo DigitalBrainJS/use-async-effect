@@ -19,18 +19,17 @@ function TestComponent(props) {
   const [progress, setProgress] = useState(0);
   const [cancel, done, result, err] = useAsyncEffect(
     function* () {
-      this.progress((p) => {
-        console.log(p);
-        setProgress(p);
-      });
-      this.innerWeight(1);
+      this.progress(setProgress);
+      this.innerWeight(4);
       setStage("Stage 1");
-      yield doJob3();
-      /*setStage("Stage 2");
-      yield doJob1();
+      const promise = doJob1();
+      yield promise;
+      yield CPromise.delay(4000);
+      setStage("Stage 2");
+      yield* doJob2();
       setStage("Stage 3");
-      yield doJob1();*/
-      //yield CPromise.delay(5000);
+      yield doJob3();
+      yield CPromise.delay(5000);
       return "Done";
     },
     { states: true, deps: [props.url] }
@@ -64,3 +63,4 @@ function TestComponent(props) {
 }
 
 export default TestComponent;
+
