@@ -1,6 +1,6 @@
 {
   "name": "use-async-effect2",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Async effect React hook with cancellation and other powers of CPromise",
   "main": "lib/use-async-effect.js",
   "scripts": {
