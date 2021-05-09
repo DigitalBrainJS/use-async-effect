@@ -1,6 +1,6 @@
 {
   "name": "use-async-effect2",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Asynchronous versions of the `useEffect` and` useCallback` hooks that able to cancel internal code by user requests or component unmounting",
   "main": "lib/use-async-effect.js",
   "scripts": {
