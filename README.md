@@ -5,12 +5,79 @@
 [![Stars](https://badgen.net/github/stars/DigitalBrainJS/use-async-effect)](https://github.com/DigitalBrainJS/use-async-effect/stargazers)
 
 ## useAsyncEffect2 :snowflake:
-This library provides `useAsyncEffect` and `useAsyncCallback` React hooks that make possible to cancel async code
-inside it and unsubscribe the internal routines if needed (request, timers etc.).
-These hooks are very useful for data fetching, since you don't have to worry about request
-cancellation when components unmounts. So just forget about `isMounted` flag and `AbortController`, 
-which were used to protect your components from React leak warning, these hooks do that for you automatically.
-Writing cancellable async code becomes easy.
+
+This library provides asynchronous versions of the `useEffect` and` useCallback` React hooks that can cancel
+asynchronous code inside it due to timeouts, user requests, or automatically when a component is unmounted or some
+dependency has changed.
+
+The library is designed to make it as easy as possible to use complex and composite asynchronous routines 
+in React components. It works on top of a [custom cancellable promise](https://www.npmjs.com/package/c-promise2),
+simplifying the solution to many common challenges with asynchronous code. Can be composed with cancellable version of `Axios`
+([cp-axios](https://www.npmjs.com/package/cp-axios)) and `fetch API` ([cp-fetch](https://www.npmjs.com/package/cp-fetch))
+to get auto cancellable React async effects/callbacks with network requests.
+
+### Quick start
+
+1. You have to use the generator syntax instead of ECMA async functions, basically by replacing `await` with `yield`
+ and  `async()=>{}` or `async function()` with `function*`:
+ 
+    ````javascript
+    // plain React useEffect hook
+    useEffect(()=>{
+      (async()=>{
+        await somePromiseHandle;
+      })();
+    }, [])
+    // useAsyncEffect React hook
+    useAsyncEffect(function*(){
+      yield somePromiseHandle;
+    }, [])
+    ````
+
+1. It's recommended to use [`CPromise`](https://www.npmjs.com/package/c-promise2) instead of the native Promise to make
+ the promise chain deeply cancellable, at least if you're going to change the component state inside it.
+
+    ````javascript
+    import { CPromise } from "c-promise2";
+    
+    const MyComponent= ()=>{
+        const [text, setText]= useState('');
+        
+        useAsyncEffect(function*(){
+          yield CPromise.delay(1000);
+          setText('Hello!');
+        });
+    }
+    ````
+
+1. Don't catch (or just rethrow caught) `CanceledError` errors with `E_REASON_UNMOUNTED` 
+reason inside your code before making any stage change:
+
+    ````javascript
+    import {
+      useAsyncEffect,
+      E_REASON_UNMOUNTED,
+      CanceledError
+    } from "use-async-effect2";
+    import cpAxios from "cp-axios";
+    
+    const MyComponent= ()=>{
+        const [text, setText]= useState('');
+        
+        useAsyncEffect(function*(){
+          try{
+              const json= (yield cpAxios('http://localhost/')).data;
+              setText(`Data: ${JSON.stringify(json)}`);
+          }catch(err){
+              // just rethrow the CanceledError error if it has E_REASON_UNMOUNTED reason
+              CanceledError.rethrow(err, E_REASON_UNMOUNTED);
+              // otherwise work with it somehow
+              setText(`Failed: ${err.toString}`);
+          } 
+        });
+    }
+    ````
+
 ## Installation :hammer:
 - Install for node.js using npm/yarn:
 
@@ -37,9 +104,9 @@ When used in conjunction with other libraries from CPromise ecosystem,
 such as [cp-fetch](https://www.npmjs.com/package/cp-fetch) and [cp-axios](https://www.npmjs.com/package/cp-axios),
 you get a powerful tool for building asynchronous logic of React components.
 
-`useAsyncEffect` & `useAsyncCallback` hooks make cancelable async functions from generators,
-providing the ability to cancel async sequence in any stage in automatically way, when the related component unmounting.
-It's totally the same as async functions, but with cancellation- you need use 'yield' instead of 'await'. That's all.
+## Examples
+
+### useAsyncEffect
 
 A tiny `useAsyncEffect` demo with JSON fetching using internal states: 
 
@@ -83,6 +150,60 @@ function JSONViewer(props) {
 }
 ````
 Notice: the related network request will be aborted, when unmounting.
+
+An example with a timeout & error handling ([Live demo](https://codesandbox.io/s/async-effect-demo1-vho29?file=/src/TestComponent.js)):
+````jsx
+import React, { useState } from "react";
+import { useAsyncEffect, E_REASON_UNMOUNTED, CanceledError} from "use-async-effect2";
+import cpFetch from "cp-fetch";
+
+export default function TestComponent(props) {
+  const [text, setText] = useState("");
+  const [isPending, setIsPending] = useState(true);
+
+  const cancel = useAsyncEffect(
+    function* ({ onCancel }) {
+      console.log("mount");
+
+      this.timeout(props.timeout);
+
+      onCancel(() => console.log("scope canceled"));
+
+      try {
+        setText("fetching...");
+        const response = yield cpFetch(props.url);
+        const json = yield response.json();
+        setIsPending(false);
+        setText(`Success: ${JSON.stringify(json)}`);
+      } catch (err) {
+        CanceledError.rethrow(err, E_REASON_UNMOUNTED); //passthrough for UNMOUNTED rejection
+        setIsPending(false);
+        setText(`Failed: ${err}`);
+      }
+
+      return () => {
+        console.log("unmount");
+      };
+    },
+    [props.url]
+  );
+
+  return (
+    <div className="component">
+      <div className="caption">useAsyncEffect demo:</div>
+      <div>{text}</div>
+      <button onClick={cancel} disabled={!isPending}>
+        Cancel request
+      </button>
+    </div>
+  );
+}
+````
+
+### useAsyncCallback
+
+Here's a [Demo App](https://codesandbox.io/s/use-async-callback-demo-app-yyic4?file=/src/TestComponent.js) to play with
+`asyncCallback` and learn about its options.
 
 Live search for character from the `rickandmorty` universe using `rickandmortyapi.com`:
 
@@ -136,54 +257,6 @@ export default function TestComponent(props) {
 This code handles the cancellation of the previous search sequence (including aborting the request) and
 canceling the sequence when the component is unmounted to avoid the React leak warning.
 
-An example with a timeout & error handling ([Live demo](https://codesandbox.io/s/async-effect-demo1-vho29?file=/src/TestComponent.js)):
-````jsx
-import React, { useState } from "react";
-import { useAsyncEffect, E_REASON_UNMOUNTED, CanceledError} from "use-async-effect2";
-import cpFetch from "cp-fetch";
-
-export default function TestComponent(props) {
-  const [text, setText] = useState("");
-  const [isPending, setIsPending] = useState(true);
-
-  const cancel = useAsyncEffect(
-    function* ({ onCancel }) {
-      console.log("mount");
-
-      this.timeout(props.timeout);
-
-      onCancel(() => console.log("scope canceled"));
-
-      try {
-        setText("fetching...");
-        const response = yield cpFetch(props.url);
-        const json = yield response.json();
-        setIsPending(false);
-        setText(`Success: ${JSON.stringify(json)}`);
-      } catch (err) {
-        CanceledError.rethrow(err, E_REASON_UNMOUNTED); //passthrough for UNMOUNTED rejection
-        setIsPending(false);
-        setText(`Failed: ${err}`);
-      }
-
-      return () => {
-        console.log("unmount");
-      };
-    },
-    [props.url]
-  );
-
-  return (
-    <div className="component">
-      <div className="caption">useAsyncEffect demo:</div>
-      <div>{text}</div>
-      <button onClick={cancel} disabled={!isPending}>
-        Cancel request
-      </button>
-    </div>
-  );
-}
-````
 `useAsyncCallback` example: fetch with progress capturing & cancellation 
  ([Live demo](https://codesandbox.io/s/use-async-callback-axios-catch-ui-l30h5?file=/src/TestComponent.js)):
 ````javascript
@@ -293,15 +366,15 @@ Generator context (`this`) and the first argument (if `options.scopeArg` is set)
 - `deps?: any[] | UseAsyncCallbackOptions` - effect dependencies
 #### UseAsyncCallbackOptions:
 - `deps: any[]` - effect dependencies 
-- `combine:boolean` - subscribe to the result of the async function already 
-running with the same arguments or run a new one. 
+- `combine:boolean` - subscribe to the result of the async function already running with the same arguments instead
+ of running a new one. 
 - `cancelPrevious:boolean` - cancel the previous pending async function before running a new one. 
-- `threads: number=0` - set concurrency limit for simultaneous calls. `0` mean unlimited.
+- `threads: number=0` - set concurrency limit for simultaneous calls. `0` means unlimited.
 - `queueSize: number=0` - set max queue size.
 - `scopeArg: boolean=false` - pass `CPromise` scope to the generator function as the first argument.
 - `states: boolean=false` - enable state changing. The function must be single threaded to use the states.
 
-#### Available states vars:
+#### Available state vars:
 - `pending: boolean` - the function is in the pending state
 - `done: boolean` - the function execution is completed (with success or failure)
 - `result: any` - refers to the resolved function result

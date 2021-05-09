@@ -4,6 +4,7 @@ import TestComponent2 from "./TestComponent2";
 import TestComponent3 from "./TestComponent3";
 import TestComponent4 from "./TestComponent4";
 import TestComponent5 from "./TestComponent5";
+import TestComponent6 from "./TestComponent6";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -37,6 +38,7 @@ export default class App extends React.Component {
                 <TestComponent3 url={this.state.url}></TestComponent3>
                 <TestComponent4 url={this.state.url}></TestComponent4>
                 <TestComponent5 url={this.state.url}></TestComponent5>
+                <TestComponent6 url={this.state.url}></TestComponent6>
                 <div><button onClick={this.onClick}>Remount all components</button></div>
             </div>
         );

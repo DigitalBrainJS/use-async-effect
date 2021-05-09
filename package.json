@@ -1,7 +1,7 @@
 {
   "name": "use-async-effect2",
   "version": "0.8.0",
-  "description": "Async effect React hook with cancellation and other powers of CPromise",
+  "description": "Asynchronous versions of the `useEffect` and` useCallback` hooks that able to cancel internal code by user requests or component unmounting",
   "main": "lib/use-async-effect.js",
   "scripts": {
     "test": "npm run test:build && mocha-headless-chrome -f test/test.html",
@@ -80,7 +80,7 @@
     "commitLimit": false
   },
   "dependencies": {
-    "c-promise2": "^0.13.0",
+    "c-promise2": "^0.13.1",
     "is-equal-objects": "^0.2.2"
   },
   "peerDependencies": {
