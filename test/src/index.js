@@ -8,6 +8,8 @@ const measureTime = () => {
     return () => Date.now() - timestamp;
 }
 
+const {E_REASON_QUEUE_OVERFLOW}= CanceledError;
+
 const delay = (ms, value) => new Promise(resolve => setTimeout(resolve, ms, value));
 
 const noop= ()=>{}
@@ -537,5 +539,35 @@ describe("useAsyncCallback", function () {
                 );
             });
         });
+    });
+
+    it("should throw E_REASON_QUEUE_OVERFLOW if queue size exceeded", function (done) {
+        let counter = 0;
+
+        function TestComponent() {
+            const fn = useAsyncCallback(function* () {
+                counter++;
+            }, {queueSize: 1, threads: 1});
+
+            const promises = [];
+
+            for (let i = 0; i < 10; i++) {
+                promises.push(fn());
+            }
+
+            Promise.all(promises).then((results) => {
+                assert.fail("doesn't throw an error");
+            }, (err)=>{
+                assert.ok(CanceledError.isCanceledError(err, E_REASON_QUEUE_OVERFLOW));
+                assert.strictEqual(counter, 2);
+            }).then(() => done(), done);
+
+            return <div>Test</div>
+        }
+
+        ReactDOM.render(
+          <TestComponent/>,
+          document.getElementById('root')
+        );
     });
 });
