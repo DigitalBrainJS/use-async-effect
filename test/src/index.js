@@ -570,4 +570,37 @@ describe("useAsyncCallback", function () {
           document.getElementById('root')
         );
     });
+
+    it("should not throw if catchErrors option is set and internal async task was rejected", function (done) {
+        let counter = 0;
+
+        function TestComponent() {
+            const fn1 = useAsyncCallback(function* () {
+                throw Error('test');
+            }, {catchErrors: true});
+
+            const fn2 = useAsyncCallback(function* () {
+                throw Error('test');
+            }, {catchErrors: false});
+
+            Promise.all([
+                fn1().catch(()=>{
+                    assert.fail('should not throw');
+                }),
+                fn2().then(()=>{
+                    assert.fail('should throw')
+                }, (err)=>{
+                    assert.ok(err instanceof Error);
+                    assert.strictEqual(err.message, 'test');
+                })
+            ]).then(()=> done(), done);
+
+            return <div>Test</div>
+        }
+
+        ReactDOM.render(
+          <TestComponent/>,
+          document.getElementById('root')
+        );
+    });
 });
