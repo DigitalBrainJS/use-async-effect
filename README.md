@@ -318,6 +318,66 @@ export default function TestComponent(props) {
 }
 ````
 
+### useAsyncState
+
+A simple enhancement of the useState hook for use inside async routines. 
+The only difference, the setter function returns a promise, that will be resolved with the current raw state value.
+If no arguments provided, it will return the current raw state value without changing the state.
+It's not guaranteed that the resolved state is the final computed state value.
+
+````javascript
+export default function TestComponent7(props) {
+
+  const [counter, setCounter] = useAsyncState(0);
+
+  const [fn, cancel, pending, done, result, err] = useAsyncCallback(function* (value) {
+    return (yield cpAxios(`https://rickandmortyapi.com/api/character/${value}`)).data;
+  }, {states: true})
+
+  return (
+    <div className="component">
+      <div>{pending ? "loading..." : (done ? err ? err.toString() : JSON.stringify(result, null, 2) : "")}</div>
+      <button onClick={async()=>{
+        const updatedValue= await setCounter((counter)=> counter + 1);
+        await fn(updatedValue); // pass the state value as an argument
+      }}>Inc</button>
+      {<button onClick={cancel} disabled={!pending}>Cancel async effect</button>}
+    </div>
+  );
+}
+````
+
+### useAsyncWatcher
+
+This hook is a promisified abstraction on top of the `useEffect` hook. The hook returns the watcher function that resolves
+its promise when one of the watched dependencies have changed.
+
+````javascript
+export default function TestComponent7(props) {
+  const [value, setValue] = useState(0);
+
+  const [fn, cancel, pending, done, result, err] = useAsyncCallback(function* () {
+    console.log('inside callback the value is:', value);
+    return (yield cpAxios(`https://rickandmortyapi.com/api/character/${value}`)).data;
+  }, {states: true, deps: [value]})
+
+  const callbackWatcher = useAsyncWatcher(fn);
+
+  return (
+    <div className="component">
+      <div className="caption">useAsyncWatcher demo:</div>
+      <div>{pending ? "loading..." : (done ? err ? err.toString() : JSON.stringify(result, null, 2) : "")}</div>
+      <input value={value} type="number" onChange={async ({target}) => {
+        setValue(target.value * 1);
+        const [fn]= await callbackWatcher();
+        await fn();
+      }}/>
+      {<button onClick={cancel} disabled={!pending}>Cancel async effect</button>}
+    </div>
+  );
+}
+````
+
 To learn more about available features, see the c-promise2 [documentation](https://www.npmjs.com/package/c-promise2).
 
 ### Wiki
@@ -352,7 +412,7 @@ Generator context (`this`) refers to the CPromise instance.
 - `error: object` - refers to the error object. This var is always set when an error occurs.
 - `canceled:boolean` - is set to true if the function has been failed with a `CanceledError`.
 
-All these vars are defined on the returned `cancelFn` function and can be alternative reached through
+All these vars defined on the returned `cancelFn` function and can be alternative reached through
 the iterator interface in the following order: 
 ````javascript
 const [cancelFn, done, result, error, canceled]= useAsyncEffect(/*code*/);
@@ -376,16 +436,31 @@ Generator context (`this`) and the first argument (if `options.scopeArg` is set)
 
 #### Available state vars:
 - `pending: boolean` - the function is in the pending state
-- `done: boolean` - the function execution is completed (with success or failure)
+- `done: boolean` - the function execution completed (with success or failure)
 - `result: any` - refers to the resolved function result
-- `error: object` - refers to the error object. This var is always set when an error occurs.
+- `error: object` - refers to the error object. This var always set when an error occurs.
 - `canceled:boolean` - is set to true if the function has been failed with a `CanceledError`.
 
-All these vars are defined on the decorated function and can be alternative reached through
+All these vars defined on the decorated function and can be alternative reached through
 the iterator interface in the following order: 
 ````javascript
-const [decoratedFn, cancelFn, pending, done, result, error, canceled]= useAsyncCallback(/*code*/);
+const [decoratedFn, cancel, pending, done, result, error, canceled]= useAsyncCallback(/*code*/);
 ````
+### useAsyncState([initialValue]): ([value: any, accessor: function])
+#### arguments
+- `initialValue`
+#### returns
+Iterable of:
+- `value: any` - current state value
+- `accessor:(newValue)=>Promise<rawStateValue:any>` - promisified setter function that can be used
+ as a getter if called without arguments
+
+### useAsyncWatcher([...valuesToWatch]): watcherFn
+#### arguments
+- `...valuesToWatch: any` - any values to watch that will be passed to the internal effect hook
+#### returns
+- `watcherFn: ([grabPrevValue= false]): Promise<[newValue, [prevValue]]>` - if the hook is watching one value
+- `watcherFn: ([grabPrevValue= false]): Promise<[...[newValue, [prevValue]]]>` - if the hook is watching multiple values
 
 ## Related projects
 - [c-promise2](https://www.npmjs.com/package/c-promise2) - promise with cancellation, decorators, timeouts, progress capturing, pause and user signals support

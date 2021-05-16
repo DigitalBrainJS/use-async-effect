@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from "react";
 import ReactDOM from "react-dom";
-import {useAsyncEffect, useAsyncCallback} from "../../lib/use-async-effect";
+import {useAsyncEffect, useAsyncCallback, useAsyncWatcher, useAsyncState} from "../../lib/use-async-effect";
 import {CPromise, CanceledError} from "c-promise2";
 
 const measureTime = () => {
@@ -602,5 +602,110 @@ describe("useAsyncCallback", function () {
           <TestComponent/>,
           document.getElementById('root')
         );
+    });
+});
+
+describe("useAsyncState", function () {
+    describe("state setter", function () {
+        it("should return Promise that resolves with the latest state value", (done) => {
+            function TestComponent() {
+                const [state, setState]= useAsyncState(123);
+
+                useEffect(() => {
+                    (async () => {
+                          assert.strictEqual(state, 123);
+                          await delay(100);
+                          const newValue = await setState(v => v + 1);
+                          assert.strictEqual(newValue, 124);
+                      }
+                    )().then(() => done(), done)
+                }, [])
+
+                return <div>Test</div>
+            }
+
+            ReactDOM.render(
+              <TestComponent/>,
+              document.getElementById('root')
+            );
+        })
+    });
+});
+
+describe("useAsyncWatcher", function () {
+
+    it("should return an async watcher function", (done)=>{
+        function TestComponent() {
+            const [state1] = useState(123);
+            const watcher= useAsyncWatcher(state1);
+            (async()=>{
+                assert.ok(typeof watcher==='function', 'not a function');
+                assert.ok(watcher() instanceof Promise, 'not a promise');
+            })().then(() => done(), done)
+            return <div>Test</div>
+        }
+
+        ReactDOM.render(
+          <TestComponent/>,
+          document.getElementById('root')
+        );
+    })
+
+    describe("watcher function", function () {
+        it("should be resolved with the latest state values", (done) => {
+            function TestComponent() {
+                const [state1, setState1] = useState(123);
+                const [state2, setState2] = useState(456);
+
+                const watcher = useAsyncWatcher(state1, state2);
+
+                useEffect(() => {
+                    (async () => {
+                          setState1(v => v + 1);
+                          setState2(v => v + 1);
+                          const [st1, st2] = await watcher();
+                          assert.strictEqual(st1, 124);
+                          assert.strictEqual(st2, 457);
+                      }
+                    )().then(() => done(), done)
+                }, [])
+
+                return <div>Test</div>
+            }
+
+            ReactDOM.render(
+              <TestComponent/>,
+              document.getElementById('root')
+            );
+        });
+
+        it("should be resolved with pairs of states that contain the newest and the previous value", (done) => {
+            function TestComponent() {
+                const [state1, setState1] = useState(123);
+                const [state2, setState2] = useState(456);
+
+                const watcher = useAsyncWatcher(state1, state2);
+
+                useEffect(() => {
+                    (async () => {
+                          setState1(v => v + 1);
+                          setState2(v => v + 1);
+                          const [[st1, st1prev], [st2, st2prev]] = await watcher(true);
+                          assert.strictEqual(st1, 124);
+                          assert.strictEqual(st2, 457);
+                          assert.strictEqual(st1prev, 123);
+                          assert.strictEqual(st2prev, 456);
+                      }
+                    )().then(() => done(), done)
+                }, [])
+
+                return <div>Test</div>
+            }
+
+            ReactDOM.render(
+              <TestComponent/>,
+              document.getElementById('root')
+            );
+        })
     });
 });

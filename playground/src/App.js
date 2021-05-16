@@ -5,6 +5,8 @@ import TestComponent3 from "./TestComponent3";
 import TestComponent4 from "./TestComponent4";
 import TestComponent5 from "./TestComponent5";
 import TestComponent6 from "./TestComponent6";
+import TestComponent7 from "./TestComponent7";
+import TestComponent8 from "./TestComponent8";
 
 export default class App extends React.Component {
   constructor(props) {
@@ -69,6 +71,8 @@ export default class App extends React.Component {
         <TestComponent4 url={this.state.url} timeout={this.state.timeout}></TestComponent4>
         <TestComponent5 url={this.state.url} timeout={this.state.timeout}></TestComponent5>
         <TestComponent6 url={this.state.url} timeout={this.state.timeout}></TestComponent6>
+        <TestComponent7 url={this.state.url} timeout={this.state.timeout}></TestComponent7>
+        <TestComponent8 url={this.state.url} timeout={this.state.timeout}></TestComponent8>
         <button className="btn btn-danger" onClick={this.onClick}>
           Remount component
         </button>
