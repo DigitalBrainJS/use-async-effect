@@ -80,6 +80,11 @@ export function useAsyncEffect(generator: CPromiseGenerator, options?: UseAsyncE
 export function useAsyncCallback(generator: CPromiseGenerator, deps?: any[]): DecoratedCallback
 export function useAsyncCallback(generator: CPromiseGenerator, options?: UseAsyncFnOptions): DecoratedCallback
 
+export function useAsyncState(initialValue: any): [any, (newState?: any)=> Promise<unknown>]
+export function useAsyncWatcher(...values: any): (grabPrevValue?: boolean)=> Promise<any>
+
+
+
 export const E_REASON_UNMOUNTED: 'E_REASON_UNMOUNTED'
 export const E_REASON_QUEUE_OVERFLOW: 'E_REASON_QUEUE_OVERFLOW'
 export const E_REASON_RESTART: 'E_REASON_RESTART'
