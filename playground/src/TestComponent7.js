@@ -1,28 +1,30 @@
 import React from "react";
 import {
-  useAsyncCallback,
-  useAsyncState
+  useAsyncDeepState
 } from "../../lib/use-async-effect";
-import cpAxios from "cp-axios";
 
 export default function TestComponent7(props) {
 
-  const [counter, setCounter] = useAsyncState(0);
-
-  const [fn, cancel, pending, done, result, err] = useAsyncCallback(function* (value) {
-    console.log('inside callback value is:', value);
-    return (yield cpAxios(`https://rickandmortyapi.com/api/character/${value}`)).data;
-  }, {states: true})
+  const [state, setState] = useAsyncDeepState({
+    foo: 123,
+    bar: 456,
+    counter: 0
+  });
 
   return (
     <div className="component">
       <div className="caption">useAsyncState demo:</div>
-      <div>{pending ? "loading..." : (done ? err ? err.toString() : JSON.stringify(result, null, 2) : "")}</div>
+      <div>{state.counter}</div>
       <button onClick={async()=>{
-        const updatedValue= await setCounter((counter)=> counter + 1);
-        await fn(updatedValue);
+        const [newState, oldState]= await setState((state)=> {
+          return {counter: state.counter + 1}
+        });
+
+        console.log(`Updated: ${newState.counter}, old: ${oldState.counter}`);
       }}>Inc</button>
-      {<button onClick={cancel} disabled={!pending}>Cancel async effect</button>}
+      <button onClick={()=>setState((state)=>{
+         counter: state.counter
+      })}>Set the same state value</button>
     </div>
   );
 }

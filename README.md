@@ -318,30 +318,36 @@ export default function TestComponent(props) {
 }
 ````
 
-### useAsyncState
+### useAsyncDeepState
 
-A simple enhancement of the useState hook for use inside async routines. 
-The only difference, the setter function returns a promise, that will be resolved with the current raw state value.
-If no arguments provided, it will return the current raw state value without changing the state.
-It's not guaranteed that the resolved state is the final computed state value.
+An enhancement of the useState hook for use inside async routines. 
+It defines a deep state abd works very similar to the React `setState` class method.
+The hook returns a promise that will be fulfilled with an array of newState and oldState values
+after the state has changed.
 
 ````javascript
-export default function TestComponent7(props) {
+export default function TestComponent(props) {
 
-  const [counter, setCounter] = useAsyncState(0);
-
-  const [fn, cancel, pending, done, result, err] = useAsyncCallback(function* (value) {
-    return (yield cpAxios(`https://rickandmortyapi.com/api/character/${value}`)).data;
-  }, {states: true})
+  const [state, setState] = useAsyncDeepState({
+    foo: 123,
+    bar: 456,
+    counter: 0
+  });
 
   return (
     <div className="component">
-      <div>{pending ? "loading..." : (done ? err ? err.toString() : JSON.stringify(result, null, 2) : "")}</div>
+      <div className="caption">useAsyncDeepState demo:</div>
+      <div>{state.counter}</div>
       <button onClick={async()=>{
-        const updatedValue= await setCounter((counter)=> counter + 1);
-        await fn(updatedValue); // pass the state value as an argument
+        const [newState, oldState]= await setState((state)=> {
+          return {counter: state.counter + 1}
+        });
+
+        console.log(`Updated: ${newState.counter}, old: ${oldState.counter}`);
       }}>Inc</button>
-      {<button onClick={cancel} disabled={!pending}>Cancel async effect</button>}
+      <button onClick={()=>setState({
+        counter: state.counter
+      })}>Set the same state value</button>
     </div>
   );
 }
@@ -446,12 +452,12 @@ the iterator interface in the following order:
 ````javascript
 const [decoratedFn, cancel, pending, done, result, error, canceled]= useAsyncCallback(/*code*/);
 ````
-### useAsyncState([initialValue]): ([value: any, accessor: function])
+### useAsyncDeepState([initialValue?: object]): ([value: any, accessor: function])
 #### arguments
 - `initialValue`
 #### returns
 Iterable of:
-- `value: any` - current state value
+- `value: object` - current state value
 - `accessor:(newValue)=>Promise<rawStateValue:any>` - promisified setter function that can be used
  as a getter if called without arguments
 

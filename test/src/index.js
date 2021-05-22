@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from "react";
 import ReactDOM from "react-dom";
-import {useAsyncEffect, useAsyncCallback, useAsyncWatcher, useAsyncState} from "../../lib/use-async-effect";
+import {useAsyncEffect, useAsyncCallback, useAsyncWatcher, useAsyncDeepState} from "../../lib/use-async-effect";
 import {CPromise, CanceledError} from "c-promise2";
 
 const measureTime = () => {
@@ -138,6 +138,46 @@ describe("useAsyncEffect", function () {
           document.getElementById('root')
         );
     });
+
+    it("should support pause & resume features", (done)=>{
+        function TestComponent() {
+            let stage= 0;
+
+            const cancelFn = useAsyncEffect(function* () {
+                yield delay(100);
+                stage= 1;
+                yield delay(100);
+                stage= 2;
+                yield delay(100);
+                stage= 3;
+                yield delay(100);
+                stage= 4;
+                yield delay(100);
+                stage= 5;
+            });
+
+            (async()=>{
+                await delay(120);
+                cancelFn.pause();
+                assert.strictEqual(stage, 1);
+                await delay(220);
+                assert.strictEqual(stage, 1);
+                cancelFn.resume();
+                await delay(50);
+                assert.strictEqual(stage, 2);
+                await delay(200);
+                assert.strictEqual(stage, 4);
+            })().then(()=> done(), done);
+
+            return <div>Test</div>
+        }
+
+        ReactDOM.render(
+          <TestComponent/>,
+          document.getElementById('root')
+        );
+    })
+
     describe('states', function (){
         it("should handle success case", function () {
             return new Promise((resolve, reject)=>{
@@ -603,20 +643,65 @@ describe("useAsyncCallback", function () {
           document.getElementById('root')
         );
     });
+
+    it("should support pause & resume features", (done)=>{
+        function TestComponent() {
+            let stage= 0;
+
+            const fn = useAsyncCallback(function* () {
+                yield delay(100);
+                stage= 1;
+                yield delay(100);
+                stage= 2;
+                yield delay(100);
+                stage= 3;
+                yield delay(100);
+                stage= 4;
+                yield delay(100);
+                stage= 5;
+                return 123;
+            });
+
+            (async()=>{
+                const promise= fn();
+                await delay(120);
+                fn.pause();
+                assert.strictEqual(stage, 1);
+                await delay(220);
+                assert.strictEqual(stage, 1);
+                fn.resume();
+                await delay(50);
+                assert.strictEqual(stage, 2);
+                const result= await promise;
+                assert.strictEqual(result, 123);
+            })().then(()=> done(), done);
+
+            return <div>Test</div>
+        }
+
+        ReactDOM.render(
+          <TestComponent/>,
+          document.getElementById('root')
+        );
+    })
 });
 
-describe("useAsyncState", function () {
+describe("useAsyncDeepState", function () {
     describe("state setter", function () {
         it("should return Promise that resolves with the latest state value", (done) => {
             function TestComponent() {
-                const [state, setState]= useAsyncState(123);
+                const [state, setState]= useAsyncDeepState({
+                    x: 123,
+                    y: 456
+                });
 
                 useEffect(() => {
                     (async () => {
-                          assert.strictEqual(state, 123);
+                          assert.strictEqual(state.x, 123);
                           await delay(100);
-                          const newValue = await setState(v => v + 1);
-                          assert.strictEqual(newValue, 124);
+                          const [newState] = await setState(({x}) => ({x: x + 1}));
+                          assert.strictEqual(newState.x, 124);
+                          assert.strictEqual(state.y, 456);
                       }
                     )().then(() => done(), done)
                 }, [])
