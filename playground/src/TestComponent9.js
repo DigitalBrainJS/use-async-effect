@@ -1,34 +1,54 @@
-import React from "react";
-import {useState} from "react";
+import React, {useState} from "react";
 import {
-  useAsyncCallback,
-  useAsyncWatcher,
+  useAsyncCallback
 } from "../../lib/use-async-effect";
-import cpAxios from "cp-axios";
-import {CPromise} from "c-promise2"
+import {CPromise} from "c-promise2";
 
 export default function TestComponent7(props) {
-  const [text, setText] = useState("");
-  const [value, setValue] = useState(0);
-  const [input, setInput] = useState("");
+  const [text, setText] = useState("one two three four five");
+  const [word, setWord] = useState("");
 
-  const [fn, cancel, pending, done, result, err, canceled, paused] = useAsyncCallback(function* () {
-    for(const stage of ['stage1', 'stage2', 'stage3', 'stage4', 'stage5']){
-      setText(`Stage: ${stage}`);
-      yield CPromise.delay(1000);
-    }
-    return "Done";
-  }, {states: true, deps: [value]})
-
+  const go = useAsyncCallback(
+    function* (text, delay) {
+      const words = text.split(/\s+/);
+      for (const word of words) {
+        setWord(word);
+        yield CPromise.delay(delay);
+      }
+    },
+    { states: true, cancelPrevios: true }
+  );
 
   return (
     <div className="component">
-      <div className="caption">useAsyncCallback pause demo:</div>
-      <div>{text}</div>
-      <div>{pending ? "loading..." : (done ? err ? err.toString() : JSON.stringify(result, null, 2) : "")}</div>
-      <button onClick={fn} disabled={pending}>Run</button>
-      <button onClick={paused? fn.resume : fn.pause} disabled={!pending}>{paused? "Resume" : "Pause"}</button>
-      <button onClick={cancel} disabled={!pending}>Cancel async effect</button>
+      <div className="caption">useAsyncEffect demo</div>
+      <input
+        value={text}
+        onChange={({ target }) => {
+          setText(target.value);
+        }}
+      />
+      <div>{go.error ? go.error.toString() : word}</div>
+      {go.pending ? (
+        go.paused ? (
+          <button className="btn btn-warning" onClick={go.resume}>
+            Resume
+          </button>
+        ) : (
+          <button className="btn btn-warning" onClick={go.pause}>
+            Pause
+          </button>
+        )
+      ) : (
+        <button className="btn btn-warning" onClick={() => go(text, 1000)}>
+          Run
+        </button>
+      )}
+      {go.pending && (
+        <button className="btn btn-warning" onClick={go.cancel}>
+          Cancel request
+        </button>
+      )}
     </div>
   );
 }
