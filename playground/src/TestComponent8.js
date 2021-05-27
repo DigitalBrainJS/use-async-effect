@@ -1,52 +1,33 @@
-import React from "react";
-import {useState} from "react";
+import React, {useEffect, useCallback, useState} from "react";
+import {CPromise} from "c-promise2";
 import {
-  useAsyncCallback,
   useAsyncWatcher,
 } from "../../lib/use-async-effect";
-import cpAxios from "cp-axios";
-import {CPromise} from "c-promise2"
 
 export default function TestComponent7(props) {
-  const [value, setValue] = useState(0);
-  const [input, setInput] = useState("");
+  const [counter, setCounter] = useState(0);
+  const [text, setText] = useState("");
 
-  const [fn, cancel, pending, done, result, err] = useAsyncCallback(function* () {
-    console.log('inside callback the value is:', value);
-    return (yield cpAxios(`https://rickandmortyapi.com/api/character/${value}`)).data;
-  }, {states: true, deps: [value]})
+  const textWatcher = useAsyncWatcher(text);
 
-  const callbackWatcher = useAsyncWatcher(fn);
+  useEffect(() => {
+    setText(`Counter: ${counter}`);
+  }, [counter]);
 
-  const onChange= useAsyncCallback(function*({target}){
-    console.log('call', target.value);
-    yield CPromise.delay(500);
-    setValue(()=>target.value * 1);
-    console.log('before');
-/*    const [fn]= yield callbackWatcher();
-    console.log('after');
-    yield fn();*/
-  }, {threads: 0})
-
-  const handleTextChange = useAsyncCallback(
-    function* (value) {
-      yield CPromise.delay(500);
-      setInput(value);
-      console.log("start:1", value);
-      //yield searchFnWatcher();
-      console.log("watch");
-    },
-    { cancelPrevios: true }
-  );
-
+  const inc = useCallback(() => {
+    (async () => {
+      await CPromise.delay(1000);
+      setCounter((counter) => counter + 1);
+      const updatedText = await textWatcher();
+      console.log(updatedText);
+    })();
+  }, []);
 
   return (
     <div className="component">
-      <div className="caption">useAsyncWatcher demo:</div>
-      <div>{pending ? "loading..." : (done ? err ? err.toString() : JSON.stringify(result, null, 2) : "")}</div>
-      <input type="text" onChange={handleTextChange}/>
-      <input value={value} type="number" onChange={onChange}/>
-      {<button onClick={cancel} disabled={!pending}>Cancel async effect</button>}
+      <div className="caption">useAsyncWatcher demo</div>
+      <div>{counter}</div>
+      <button onClick={inc}>Inc counter</button>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 {
   "name": "use-async-effect2",
   "version": "0.11.2",
-  "description": "Asynchronous versions of the `useEffect` and` useCallback` hooks that able to cancel internal code by user requests or component unmounting",
+  "description": "Asynchronous & promisified versions of the `useEffect`, `useCallback` and `useState` hooks that able to cancel internal code on user requests or component unmounting",
   "main": "lib/use-async-effect.js",
   "scripts": {
     "test": "npm run test:build && mocha-headless-chrome -f test/test.html",
@@ -23,10 +23,16 @@
   },
   "license": "MIT",
   "keywords": [
-    "React",
+    "react",
+    "reactjs",
     "hook",
+    "hooks",
     "useEffect",
     "useCallback",
+    "useAsyncEffect",
+    "use-async-effect",
+    "async",
+    "deepstate",
     "setState",
     "promise",
     "c-promise",
@@ -41,9 +47,9 @@
     "abort",
     "AbortController",
     "AbortSignal",
-    "async",
     "signal",
     "await",
+    "wait",
     "promises",
     "generator",
     "co",
@@ -54,7 +60,6 @@
     "delay",
     "break",
     "suspending",
-    "wait",
     "bluebird",
     "deferred",
     "react",
@@ -63,8 +68,7 @@
     "close",
     "closable",
     "pause",
-    "task",
-    "reactjs"
+    "task"
   ],
   "repository": "https://github.com/DigitalBrainJS/use-async-effect.git",
   "bugs": {

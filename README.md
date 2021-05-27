@@ -6,9 +6,9 @@
 
 ## useAsyncEffect2 :snowflake:
 
-This library provides asynchronous versions of the `useEffect` and` useCallback` React hooks that can cancel
-asynchronous code inside it due to timeouts, user requests, or automatically when a component is unmounted or some
-dependency has changed.
+This library makes it possible to use cancellable async effects inside React components by providing asynchronous
+versions of the `useEffect` and` useCallback` hooks. These hooks can cancel asynchronous code inside it due to timeouts,
+user requests, or automatically when a component is unmounted or some dependency has changed.
 
 The library is designed to make it as easy as possible to use complex and composite asynchronous routines 
 in React components. It works on top of a [custom cancellable promise](https://www.npmjs.com/package/c-promise2),
