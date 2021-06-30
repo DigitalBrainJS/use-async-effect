@@ -8,7 +8,7 @@ const measureTime = () => {
     return () => Date.now() - timestamp;
 }
 
-const {E_REASON_QUEUE_OVERFLOW}= CanceledError;
+const {E_REASON_QUEUE_OVERFLOW, E_REASON_UNMOUNTED}= CanceledError;
 
 const delay = (ms, value) => new Promise(resolve => setTimeout(resolve, ms, value));
 
