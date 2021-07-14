@@ -16,7 +16,7 @@ export default function TestComponent7(props) {
         yield CPromise.delay(delay);
       }
     },
-    { states: true, cancelPrevios: true }
+    { states: true, cancelPrevious: true }
   );
 
   return (
