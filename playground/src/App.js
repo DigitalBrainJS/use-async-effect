@@ -8,6 +8,7 @@ import TestComponent6 from "./TestComponent6";
 import TestComponent7 from "./TestComponent7";
 import TestComponent8 from "./TestComponent8";
 import TestComponent9 from "./TestComponent9";
+import LiveTest from "./states";
 
 export default class App extends React.Component {
   constructor(props) {
@@ -66,15 +67,16 @@ export default class App extends React.Component {
             Timeout [{this.state.timeout}]ms
           </label>
         </div>
-        <TestComponent1 url={this.state.url} timeout={this.state.timeout}></TestComponent1>
+{/*        <TestComponent1 url={this.state.url} timeout={this.state.timeout}></TestComponent1>
         <TestComponent2 url={this.state.url} timeout={this.state.timeout}></TestComponent2>
         <TestComponent3 url={this.state.url} timeout={this.state.timeout}></TestComponent3>
         <TestComponent4 url={this.state.url} timeout={this.state.timeout}></TestComponent4>
         <TestComponent5 url={this.state.url} timeout={this.state.timeout}></TestComponent5>
-        <TestComponent6 url={this.state.url} timeout={this.state.timeout}></TestComponent6>
+        <TestComponent6 url={this.state.url} timeout={this.state.timeout}></TestComponent6>*/}
         <TestComponent7 url={this.state.url} timeout={this.state.timeout}></TestComponent7>
-        <TestComponent8 url={this.state.url} timeout={this.state.timeout}></TestComponent8>
+{/*        <TestComponent8 url={this.state.url} timeout={this.state.timeout}></TestComponent8>
         <TestComponent9 url={this.state.url} timeout={this.state.timeout}></TestComponent9>
+        <LiveTest></LiveTest>*/}
         <button className="btn btn-danger" onClick={this.onClick}>
           Remount component
         </button>

@@ -339,11 +339,11 @@ export default function TestComponent(props) {
       <div className="caption">useAsyncDeepState demo:</div>
       <div>{state.counter}</div>
       <button onClick={async()=>{
-        const [newState, oldState]= await setState((state)=> {
+        const newState= await setState((state)=> {
           return {counter: state.counter + 1}
         });
 
-        console.log(`Updated: ${newState.counter}, old: ${oldState.counter}`);
+        console.log(`Updated: ${newState.counter}`);
       }}>Inc</button>
       <button onClick={()=>setState({
         counter: state.counter

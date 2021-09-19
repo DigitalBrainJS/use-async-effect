@@ -699,7 +699,7 @@ describe("useAsyncDeepState", function () {
                     (async () => {
                           assert.strictEqual(state.x, 123);
                           await delay(100);
-                          const [newState] = await setState(({x}) => ({x: x + 1}));
+                          const newState = await setState(({x}) => ({x: x + 1}));
                           assert.strictEqual(newState.x, 124);
                           assert.strictEqual(state.y, 456);
                       }
