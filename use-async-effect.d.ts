@@ -45,7 +45,11 @@ export interface UseAsyncEffectOptions {
     /**
      * @default false
      */
-    states?: boolean
+    states?: boolean,
+    /**
+     * @default false
+     */
+    once?: boolean
 }
 
 export type CancelReason = string | Error;
@@ -91,7 +95,14 @@ export interface CPromiseGenerator {
 }
 
 export interface UseAsyncDeepStateOptions {
+    /**
+     * @default true
+     */
     watch?: boolean;
+    /**
+     * @default true
+     */
+    defineSetters?: boolean;
 }
 
 export function useAsyncEffect(generator: CPromiseGenerator, deps?: any[]): AsyncEffectCancelFn

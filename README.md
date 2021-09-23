@@ -6,13 +6,15 @@
 
 ## useAsyncEffect2 :snowflake:
 
-This library makes it possible to use cancellable async effects inside React components by providing asynchronous
-versions of the `useEffect` and` useCallback` hooks. These hooks can cancel asynchronous code inside it due to timeouts,
-user requests, or automatically when a component is unmounted or some dependency has changed.
+This library provides an async belt for the React components as: 
+- `useAsyncEffect` - deeply cancellable asynchronous effects that can be cleared (canceled) on component unmounting, timeout, or by user request.
+- `useAsyncCallback` - cancellable async callbacks
+- `useAsyncDeepState` - to define a deep state, the actual values of which can be accessed from an async routine
+- `useAsyncWatcher` - to watch for state updates in a promise flow
 
 The library is designed to make it as easy as possible to use complex and composite asynchronous routines 
 in React components. It works on top of a [custom cancellable promise](https://www.npmjs.com/package/c-promise2),
-simplifying the solution to many common challenges with asynchronous code. Can be composed with cancellable version of `Axios`
+simplifying the solution to many common challenges with asynchronous tasks. Can be composed with cancellable version of `Axios`
 ([cp-axios](https://www.npmjs.com/package/cp-axios)) and `fetch API` ([cp-fetch](https://www.npmjs.com/package/cp-fetch))
 to get auto cancellable React async effects/callbacks with network requests.
 
@@ -22,15 +24,18 @@ to get auto cancellable React async effects/callbacks with network requests.
  and  `async()=>{}` or `async function()` with `function*`:
  
     ````javascript
-    // plain React useEffect hook
+    // plain React effect using `useEffect` hook
     useEffect(()=>{
-      (async()=>{
+      const doSomething = async()=>{
         await somePromiseHandle;
-      })();
+        setStateVar('foo');
+      };
+      doSomething();
     }, [])
-    // useAsyncEffect React hook
+    // auto-cleanable React async effect using `useAsyncEffect` hook
     useAsyncEffect(function*(){
       yield somePromiseHandle;
+      setStateVar('foo');
     }, [])
     ````
 
@@ -110,21 +115,22 @@ you get a powerful tool for building asynchronous logic of React components.
 
 A tiny `useAsyncEffect` demo with JSON fetching using internal states: 
 
-[Live demo to play](https://codesandbox.io/s/use-async-effect-fetch-tiny-ui-states-g5qd7)
+[Live demo to play](https://codesandbox.io/s/use-async-effect-axios-minimal-pdngg?file=/src/TestComponent.js)
 
 ````javascript
-export default function JSONViewer(props) {
-    const [cancel, done, result]= useAsyncEffect(function*(){
-      return (yield cpAxios(props.url)).data;
-    }, {states: true})
+function JSONViewer({ url, timeout }) {
+  const [cancel, done, result, err] = useAsyncEffect(function* () {
+      return (yield cpAxios(url).timeout(timeout)).data;
+    }, { states: true });
 
-    return (
-        <div className="component">
-            <div className="caption">useAsyncEffect demo:</div>
-            <div>{done? JSON.stringify(result) : "loading..."}</div>
-            <button onClick={cancel}>Cancel async effect</button>
-        </div>
-    );
+  return (
+    <div>
+      {done ? (err ? err.toString() : JSON.stringify(result)) : "loading..."}
+      <button className="btn btn-warning" onClick={cancel} disabled={done}>
+        Cancel async effect (abort request)
+      </button>
+    </div>
+  );
 }
 ````
 
@@ -411,6 +417,7 @@ Generator context (`this`) refers to the CPromise instance.
 - `options.deps?: any[]` - effect dependencies
 - `options.skipFirst?: boolean` - skip first render
 - `options.states: boolean= false` - use states
+- `options.once: boolean= false` - run the effect only once (the effect's async routine should be fully completed)
 
 #### Available states vars:
 - `done: boolean` - the function execution is completed (with success or failure)
